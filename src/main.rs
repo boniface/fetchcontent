@@ -24,7 +24,7 @@ async fn manage_state(data: web::Data<AppState>) -> impl Responder {
 
 #[get("/")] // Handled By Service
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    HttpResponse::Ok().body("Hello world! Where is this Running")
 }
 
 #[post("/echo")]  // Handled by Micros
@@ -45,14 +45,19 @@ async fn main() -> std::io::Result<()> {
                 app_name: String::from("Actix-web"),
             })
             .service(hello)
-            .route("/state", web::get().to(manage_state))
+            .route("/state", web::get()
+                .to(manage_state)
+            )
             .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .route("/hey", web::get()
+                .to(manual_hello))
             .service(
                 web::scope("/app")
                     // ...so this handles requests for `GET /app/index.html`
-                    .route("/index.html", web::get().to(index))
-                    .route("/access.php", web::get().to(php))
+                    .route("/index.html", web::get()
+                        .to(index))
+                    .route("/access.php", web::get()
+                        .to(php))
             )
     })
         .bind("127.0.0.1:8080")?
