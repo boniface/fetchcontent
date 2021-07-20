@@ -1,6 +1,5 @@
 /target
 fetchcontent.iml
-/.idea
 /fetchcontent.iml
 .idea
 Cargo.lock
