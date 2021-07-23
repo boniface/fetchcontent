@@ -1,4 +1,4 @@
-use crate::routes::{health_check, subscribe};
+use crate::routes::*;
 use actix_web::dev::Server;
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
@@ -16,3 +16,4 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
         .listen(listener)?
         .run();
     Ok(server)
+}
