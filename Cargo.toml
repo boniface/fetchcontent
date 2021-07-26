@@ -16,6 +16,7 @@ actix-http = "=3.0.0-beta.8"
 actix-web = "=4.0.0-beta.8"
 cdrs-tokio = "4.0.0"
 serde = "1.0.115"
+fp-core = "0.1.9"
 config = { version = "0.10.1", default-features = false, features = ["yaml"] }
 sqlx = { version = "0.5.1", default-features = false, features = [ "runtime-actix-rustls", "macros", "postgres", "uuid", "chrono", "migrate", "offline"] }
 uuid = { version = "0.8.1", features = ["v4"] }
