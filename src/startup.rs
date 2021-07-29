@@ -7,6 +7,7 @@ pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
+            .route("/", web::get().to(health_check_handler))
     })
         .listen(listener)?
         .run();

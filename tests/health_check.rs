@@ -18,7 +18,6 @@ async fn spawn_app() -> TestApp {
     }
 }
 
-
 #[actix_rt::test]
 async fn health_check_works() {
     // Arrange
