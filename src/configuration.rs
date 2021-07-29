@@ -1,38 +1,17 @@
 use std::sync::Arc;
-
-use cdrs_tokio::cluster::{ClusterTcpConfig, NodeTcpConfigBuilder};
+use cdrs_tokio::authenticators::NoneAuthenticator;
+use cdrs_tokio::cluster::{ClusterTcpConfig, NodeTcpConfigBuilder, TcpConnectionPool};
+use cdrs_tokio::cluster::session::{new as new_session, Session};
 use cdrs_tokio::load_balancing::RoundRobin;
 use cdrs_tokio::retry::DefaultRetryPolicy;
+use std::convert::TryFrom;
+
+type CurrentSession = Session<RoundRobin<TcpConnectionPool>>;
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
-    pub database: DatabaseSettings,
+    pub database: CassandraSettings,
     pub application_port: u16,
-}
-
-#[derive(serde::Deserialize)]
-pub struct DatabaseSettings {
-    pub username: String,
-    pub password: String,
-    pub port: u16,
-    pub host: String,
-    pub database_name: String,
-}
-
-impl DatabaseSettings {
-    pub fn connection_string(&self) -> String {
-        format!(
-            "postgres://{}:{}@{}:{}/{}",
-            self.username, self.password, self.host, self.port, self.database_name
-        )
-    }
-
-    pub fn connection_string_without_db(&self) -> String {
-        format!(
-            "postgres://{}:{}@{}:{}",
-            self.username, self.password, self.host, self.port
-        )
-    }
 }
 
 #[derive(serde::Deserialize)]
@@ -41,15 +20,15 @@ pub struct CassandraSettings {
     pub password: String,
     pub port: u16,
     pub host: String,
-    pub keyspace_name: Str,
+    pub keyspace_name: String,
 }
 
 impl CassandraSettings {
-    pub fn getCassandraSession(&self) -> Arc<CurrentSession> {
+    pub async fn get_cassandra_session(&self) -> Arc<CurrentSession> {
         let node =
             NodeTcpConfigBuilder::new(
                 "127.0.0.1:9042", Arc::new(
-                    NoneAuthenticatorProvider)
+                    NoneAuthenticator),
             ).build();
         let cluster_config = ClusterTcpConfig(vec![node]);
         let lb = RoundRobin::new();
@@ -63,9 +42,43 @@ impl CassandraSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
+    println!(" Has this been Called ");
     let mut settings = config::Config::default();
+    println!("What is the Value {:?}", config::File::with_name("configuration.rs"));
 
     settings.merge(config::File::with_name("configuration"))?;
 
+
+
     settings.try_into()
+}
+
+/// The possible runtime environment for our application.
+pub enum Environment {
+    Local,
+    Production,
+}
+
+impl Environment {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Environment::Local => "local",
+            Environment::Production => "production",
+        }
+    }
+}
+
+impl TryFrom<String> for Environment {
+    type Error = String;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.to_lowercase().as_str() {
+            "local" => Ok(Self::Local),
+            "production" => Ok(Self::Production),
+            other => Err(format!(
+                "{} is not a supported environment. Use either `local` or `production`.",
+                other
+            )),
+        }
+    }
 }
